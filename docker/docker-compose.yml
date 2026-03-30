@@ -1,0 +1,41 @@
+services:
+  spring-gbook:
+    depends_on:
+      gbook-mysql:
+        condition: service_healthy
+    build: ../guest-book
+    image: siujeong/gbook:1.0
+    ports:
+      - "8080:8080"
+    networks:
+      - gbook-net
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://gbook-mysql:3306/gbook_db?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowMultiQueries=true
+      SPRING_DATASOURCE_USERNAME: uty
+      SPRING_DATASOURCE_PASSWORD: 1234
+
+  gbook-mysql:
+    image: mysql:8.4.5
+    volumes:
+      - gbook-volume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: gbook_db
+      MYSQL_USER: uty
+      MYSQL_PASSWORD: 1234
+    networks:
+      - gbook-net
+    healthcheck:
+      start_period: 5s
+      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 5s
+      retries: 10
+
+networks:
+  gbook-net:
+    external: true
+
+volumes:
+  gbook-volume:
+    external: true
